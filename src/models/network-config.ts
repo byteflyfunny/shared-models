@@ -15,6 +15,18 @@ export enum NetworkName {
   EthereumSepolia = 'Ethereum_Sepolia',
   PolygonAmoy = 'Polygon_Amoy',
 
+  /*
+   * Self-hosted deployment on Mantle Sepolia (chain id 5003).
+   *
+   * This branch tracks v8.0.1 for the client side (waku-broadcaster-client 9.1.1
+   * and wallet 10.9.0 require ^8.0.1). The broadcaster server needs the v8.0.0
+   * baseline instead, because 8.0.1 refactored BroadcasterRawParamsTransact into a
+   * union type for EIP-7702 while the server still reads a flat struct. The two
+   * run as separate processes and only talk over Waku, so each can pin the
+   * version it needs - see branch mantle-support for the 8.0.0 baseline.
+   */
+  MantleSepolia = 'Mantle_Sepolia',
+
   // Dev only
   Hardhat = 'Hardhat',
 
@@ -81,6 +93,7 @@ export const RailgunProxyContract: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '0xeCFCf3b4eC647c4Ca6D49108b311b7a7C9543fea',
   [NetworkName.PolygonAmoy]: '0xD1aC80208735C7f963Da560C42d6BD82A8b175B5',
+  [NetworkName.MantleSepolia]: '0xFc8dF7193698dAfcAd3e4c14B9e9a62BAbc34004',
 
   // Dev only
   [NetworkName.Hardhat]: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
@@ -102,6 +115,7 @@ export const RelayAdaptContract: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '0x7e3d929EbD5bDC84d02Bd3205c777578f33A214D',
   [NetworkName.PolygonAmoy]: '0xc340f7E17A42154674d6B50190386C9a2982D12E',
+  [NetworkName.MantleSepolia]: '0x520526bCDEA74A31bc91FD9c2EE13f32eF4a5912',
 
   // Dev only
   [NetworkName.Hardhat]: '0x0355B7B8cb128fA5692729Ab3AAa199C1753f726',
@@ -123,6 +137,7 @@ export const RailgunProxyDeploymentBlock: Record<NetworkName, number> = {
   // Test nets
   [NetworkName.EthereumSepolia]: 5784866,
   [NetworkName.PolygonAmoy]: 6666136,
+  [NetworkName.MantleSepolia]: 42184120,
 
   // Dev only
   [NetworkName.Hardhat]: 0,
@@ -144,6 +159,7 @@ export const BaseTokenWrappedAddress: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', // (Sepolia) WETH
   [NetworkName.PolygonAmoy]: '0x21d4Ec3C9a2408C5535ecc26a09d94dC7B7f5c10', // (Amoy) WMATIC
+  [NetworkName.MantleSepolia]: '0xd0B95cB952B89905181f0EF3d69B55Ad6a42AAcD',
 
   // Dev only
   [NetworkName.Hardhat]: '0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7', // (Hardhat) WETH
@@ -172,6 +188,7 @@ export const RailgunPoseidonMerkleAccumulatorV3Contract: Record<
   // Test nets
   [NetworkName.EthereumSepolia]: '', // TODO
   [NetworkName.PolygonAmoy]: '', // TODO
+  [NetworkName.MantleSepolia]: '',
 
   // Dev only
   [NetworkName.Hardhat]: '0x2B0d36FACD61B71CC05ab8F3D2355ec3631C0dd5',
@@ -196,6 +213,7 @@ export const RailgunPoseidonMerkleVerifierV3Contract: Record<
   // Test nets
   [NetworkName.EthereumSepolia]: '', // TODO
   [NetworkName.PolygonAmoy]: '', // TODO
+  [NetworkName.MantleSepolia]: '',
 
   // Dev only
   [NetworkName.Hardhat]: '0xfbC22278A96299D91d41C453234d97b4F5Eb9B2d',
@@ -217,6 +235,7 @@ export const RailgunTokenVaultV3Contract: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '', // TODO
   [NetworkName.PolygonAmoy]: '', // TODO
+  [NetworkName.MantleSepolia]: '',
 
   // Dev only
   [NetworkName.Hardhat]: '0xD84379CEae14AA33C123Af12424A37803F885889',
@@ -241,6 +260,7 @@ export const RailgunPoseidonMerkleAccumulatorV3DeploymentBlock: Record<
   // Test nets
   [NetworkName.EthereumSepolia]: 0, // TODO
   [NetworkName.PolygonAmoy]: 0, // TODO
+  [NetworkName.MantleSepolia]: 0,
 
   // Dev only
   [NetworkName.Hardhat]: 0,
@@ -262,6 +282,7 @@ export const RailgunRegistryContract: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '0xFe276aD6a9Be967292D7fcb74E5510a1A6796bFb',
   [NetworkName.PolygonAmoy]: '',
+  [NetworkName.MantleSepolia]: '',
 
   // Dev only
   [NetworkName.Hardhat]: '',
@@ -283,6 +304,7 @@ export const RelayAdapt7702Contract: Record<NetworkName, string> = {
   // Test nets
   [NetworkName.EthereumSepolia]: '0x19702345c059ac86a1f17434ebE0227D62F5965f',
   [NetworkName.PolygonAmoy]: '',
+  [NetworkName.MantleSepolia]: '',
 
   // Dev only
   [NetworkName.Hardhat]: '',
@@ -654,6 +676,57 @@ export const NETWORK_CONFIG: Record<NetworkName, Network> = {
         NetworkName.PolygonAmoy
       ],
     supportsV3: true,
+  },
+
+  /*
+   * 自建部署：Mantle Sepolia (5003)。字段按 v8.0.1（含 7702 相关）。
+   *
+   *  - wrappedAddress 指向我们随合约一起部署的 WETH9：Mantle Sepolia 无官方 WMNT，
+   *    而 RelayAdapt 需要一个 wBase。
+   *  - supports7702 = false：未在 Mantle 上核实 EIP-7702 支持，保守关闭。
+   *  - V3 与 registry 地址留空：均未部署。
+   *  - poi 暂不配置——给出 launchBlock 会让 engine 启用 POI 链路，需与自建
+   *    PPOI 节点一同开启。届时填：
+   *      poi: { launchBlock: 42184120, launchTimestamp: 1785912913 },
+   */
+  [NetworkName.MantleSepolia]: {
+    chain: {
+      type: ChainType.EVM,
+      id: 5003,
+    },
+    name: NetworkName.MantleSepolia,
+    publicName: 'Mantle Sepolia Testnet',
+    shortPublicName: 'Mantle Sepolia',
+    coingeckoId: 'mantle',
+    baseToken: {
+      symbol: 'MNT',
+      wrappedSymbol: 'WMNT',
+      wrappedAddress: BaseTokenWrappedAddress[NetworkName.MantleSepolia],
+      decimals: 18,
+    },
+    proxyContract: RailgunProxyContract[NetworkName.MantleSepolia],
+    relayAdaptContract: RelayAdaptContract[NetworkName.MantleSepolia],
+    relayAdaptHistory: [RelayAdaptContract[NetworkName.MantleSepolia]],
+    supports7702: false,
+    relayAdapt7702Contract: RelayAdapt7702Contract[NetworkName.MantleSepolia],
+    relayAdapt7702History: [],
+    railgunRegistryContract:
+      RailgunRegistryContract[NetworkName.MantleSepolia],
+    deploymentBlock: RailgunProxyDeploymentBlock[NetworkName.MantleSepolia],
+    isDevOnlyNetwork: true,
+    isTestnet: true,
+    defaultEVMGasType: EVMGasType.Type2,
+    poseidonMerkleAccumulatorV3Contract:
+      RailgunPoseidonMerkleAccumulatorV3Contract[NetworkName.MantleSepolia],
+    poseidonMerkleVerifierV3Contract:
+      RailgunPoseidonMerkleVerifierV3Contract[NetworkName.MantleSepolia],
+    tokenVaultV3Contract:
+      RailgunTokenVaultV3Contract[NetworkName.MantleSepolia],
+    deploymentBlockPoseidonMerkleAccumulatorV3:
+      RailgunPoseidonMerkleAccumulatorV3DeploymentBlock[
+        NetworkName.MantleSepolia
+      ],
+    supportsV3: false,
   },
   [NetworkName.PolygonMumbai_DEPRECATED]: {
     deprecated: true,
