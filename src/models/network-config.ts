@@ -594,12 +594,10 @@ export const NETWORK_CONFIG: Record<NetworkName, Network> = {
    *  - wrappedAddress 指向我们随合约一起部署的 WETH9。Mantle Sepolia 没有官方
    *    WMNT（主网的 0x78c1…4cb8 在测试网无代码），而 RelayAdapt 需要一个 wBase。
    *  - V3 相关地址留空：V3 未上主网，我们也未部署。
-   *  - poi 暂不配置。一旦给出 launchBlock，engine 就会启用 POI 链路
-   *    （railgun-engine.ts: `if (isDefined(poiLaunchBlock) || supportsV3)`），
-   *    而 broadcaster 走到 POI assurance 时若没有节点会抛
-   *    'No poi nodeURL configured'。等自建 PPOI 节点就绪后再打开：
-   *      poi: { launchBlock: 42184120, launchTimestamp: 1785912913 },
-   *    （1785912913 = 区块 42184120 的链上时间 2026-08-05T06:55:13Z）
+   *  - poi 已启用，与自建 PPOI 节点配套。给出 launchBlock 后 engine 会走 POI
+   *    链路（railgun-engine.ts: `if (isDefined(poiLaunchBlock) || supportsV3)`），
+   *    broadcaster 必须同时配好 configDefaults.poi.nodeURL，否则走到 POI
+   *    assurance 时抛 'No poi nodeURL configured'。
    */
   [NetworkName.MantleSepolia]: {
     chain: {
@@ -633,6 +631,15 @@ export const NETWORK_CONFIG: Record<NetworkName, Network> = {
       RailgunPoseidonMerkleAccumulatorV3DeploymentBlock[
         NetworkName.MantleSepolia
       ],
+    /*
+     * 指向自建 PPOI 节点覆盖的范围。launchBlock 用 RAILGUN 合约的部署区块——
+     * 本链在此之前没有任何 shield/transact，从这里起扫即可覆盖全部历史。
+     * launchTimestamp 是该区块的实际出块时间（2026-08-05T06:55:13Z）。
+     */
+    poi: {
+      launchBlock: 42184120,
+      launchTimestamp: 1785912913,
+    },
     supportsV3: false,
   },
   [NetworkName.PolygonMumbai_DEPRECATED]: {
