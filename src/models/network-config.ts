@@ -685,9 +685,9 @@ export const NETWORK_CONFIG: Record<NetworkName, Network> = {
    *    而 RelayAdapt 需要一个 wBase。
    *  - supports7702 = false：未在 Mantle 上核实 EIP-7702 支持，保守关闭。
    *  - V3 与 registry 地址留空：均未部署。
-   *  - poi 暂不配置——给出 launchBlock 会让 engine 启用 POI 链路，需与自建
-   *    PPOI 节点一同开启。届时填：
-   *      poi: { launchBlock: 42184120, launchTimestamp: 1785912913 },
+   *  - poi 已启用，与自建 PPOI 节点配套。给出 launchBlock 后 engine 会走 POI
+   *    链路（railgun-engine.ts: `if (isDefined(poiLaunchBlock) || supportsV3)`），
+   *    钱包必须同时传 poiNodeURLs，否则读余额时 POI.nodeInterface 未初始化会崩。
    */
   [NetworkName.MantleSepolia]: {
     chain: {
@@ -726,6 +726,15 @@ export const NETWORK_CONFIG: Record<NetworkName, Network> = {
       RailgunPoseidonMerkleAccumulatorV3DeploymentBlock[
         NetworkName.MantleSepolia
       ],
+    /*
+     * 指向自建 PPOI 节点覆盖的范围。launchBlock 用 RAILGUN 合约的部署区块——
+     * 本链在此之前没有任何 shield/transact，从这里起扫即可覆盖全部历史。
+     * launchTimestamp 是该区块的实际出块时间（2026-08-05T06:55:13Z）。
+     */
+    poi: {
+      launchBlock: 42184120,
+      launchTimestamp: 1785912913,
+    },
     supportsV3: false,
   },
   [NetworkName.PolygonMumbai_DEPRECATED]: {
